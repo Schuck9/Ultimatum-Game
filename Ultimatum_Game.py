@@ -6,10 +6,13 @@ A simple implementation of Ultimatum Game
 
 import numpy as np
 import pandas as pd
+import os
 
 class Ultimatum_Game():
-    def __init__(self,population,divided_part = 12):
-        self.N = population
+    def __init__(self,N,w,u,divided_part = 12):
+        self.N = N
+        self.w = w
+        self.u = u
         # self.meta_element = np.around(np.arange(0,1,1/12),2) #1/12 equally divided
         self.meta_element=np.arange(divided_part)
         self.Frequency_matrix = np.zeros((divided_part,divided_part))
@@ -57,8 +60,8 @@ class Ultimatum_Game():
                         pay_off_array[P1][P2] += offer   
                 else:
                     continue
-                    
-        return pay_off_array
+        #Probability is NaN at 2020/2/9/0:18, modifed "/12"            
+        return pay_off_array/12
 
     def Pay_off_calculate(self,pay_off,w):
         '''
@@ -81,10 +84,12 @@ class Ultimatum_Game():
         '''
         individual_index = np.arange(self.N)
         effective_payoff = effective_payoff*1.0/np.sum(effective_payoff)
-        birth,death = np.random.choice(individual_index,size = 2,p = effective_payoff)
+        birth,death = np.random.choice(a = individual_index,size = 2,p = effective_payoff)
         if np.random.rand(1) <= u:
             # Mutation occurs
-            p_vector[death],q_vector[death] = np.random.rand(2)
+            # p_vector[death],q_vector[death] = np.random.rand(2)
+            p_vector[death] = np.random.choice(self.meta_element,size = 1)
+            q_vector[death] = np.random.choice(self.meta_element,size = 1)
             # print("Mutation occurs!\n")
         else :
             # Reproduce occurs
@@ -105,11 +110,12 @@ class Ultimatum_Game():
 
 
     
-    def Save(self,pq_array):
+    def Save(self,pq_array,Epoch):
+        os.mkdir("./result/w{}_ep{}_u{}".format(self.w,Epoch,self.u))
         df = pd.DataFrame(data = pq_array)
-        df.to_csv('./strategy.csv',index = None)
-        freq = pd.DataFrame(data = self.Frequency_matrix)
-        freq.to_csv('./frequency.csv',index = None)
+        df.to_csv('./result/w{}_ep{}_u{}/strategy_w{}_ep{}_u{}.csv'.format(self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
+        freq = pd.DataFrame(data = self.Frequency_matrix*1.0/(100*Epoch))
+        freq.to_csv('./result/w{}_ep{}_u{}/frequency_w{}_ep{}_u{}.csv'.format(self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
         # df = pd.read_csv('./results.csv')
         # print(df)
 
@@ -120,11 +126,11 @@ class Ultimatum_Game():
 if __name__ == '__main__':
 
     N = 100
-    w = 100
-    u = pow(10,-1.25) #u = 10^(-1.25)
-    Epochs = pow(10,6) #演化轮次
+    w = np.around(pow(10,2),4)
+    u = np.around(pow(10,-1.25),4) #u = 10^(-1.25)
+    Epochs = pow(10,7) #演化轮次
     #生成环境env
-    UG = Ultimatum_Game(N)
+    UG = Ultimatum_Game(N,w,u)
     #创建N个博弈方
     p_vector, q_vector = UG.Make_Player(N)
     for Epoch in range(1,Epochs):
@@ -136,14 +142,15 @@ if __name__ == '__main__':
         p_vector,q_vector = UG.Moran_process(p_vector,q_vector,effective_payoff,u)
         #计算频率
         UG.Frequency_calculate(p_vector,q_vector,Epoch)
-        if Epoch % 50000== 0:
+        if Epoch % 100000== 0:
             print("Epoch[{}]".format(Epoch))
             print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
             print("Frequency:\n{}\n".format(UG.Frequency_matrix*1.0/(100*Epoch)))
-    #保留一位有效数字
-    p_vector = np.around(p_vector,1)
-    q_vector = np.around(q_vector,1)
-    print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
-    pq_array = np.vstack((p_vector,q_vector))
-    UG.Save(pq_array)
+        # if Epoch % 100000 == 0:
+            #保留一位有效数字
+            p_vector = np.around(p_vector,1)
+            q_vector = np.around(q_vector,1)
+            print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
+            pq_array = np.vstack((p_vector,q_vector))
+            UG.Save(pq_array,Epoch)
     print("done!")
