@@ -1,2 +1,2 @@
 # Ultimatum-Game
-A implement of Ultimatum_Game
+A implement of Ultimatum Game
