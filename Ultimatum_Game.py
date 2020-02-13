@@ -1,6 +1,6 @@
 """
 A simple implementation of Ultimatum Game
-@date: 2020.2.9
+@date: 2020.2.13
 @author: Tingyu Mo
 """
 
@@ -10,15 +10,20 @@ import os
 import time
 
 class Ultimatum_Game():
-    def __init__(self,N,w,u,divided_part = 12+1):
+    def __init__(self,N,w,u,divided_part = 12+1,check_point = None):
         self.N = N
         self.w = w
         self.u = u
         # self.meta_element = np.around(np.arange(0,1,1/12),2) #1/12 equally divided
         self.meta_element=np.arange(divided_part)
         self.Frequency_matrix = np.zeros((divided_part,divided_part))
-        self.dir_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
-        os.mkdir("./result/{}".format(self.dir_str))
+        
+        if check_point == None:
+            self.dir_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+            os.mkdir("./result/{}".format(self.dir_str))
+        else:
+            self.dir_str = check_point
+        
 
     def Make_Player(self,N):
         '''
@@ -171,7 +176,9 @@ class Ultimatum_Game():
         w = float(parse_str[1][1:])
         Epoch = int(parse_str[2][2:])
         u = float(parse_str[3][1:])
-        
+        self.w = w
+        self.u = u
+
         strategy = pd.read_csv(strategy_path)
         frequency = pd.read_csv(frequency_path)
         pd_array = strategy.values
@@ -192,16 +199,17 @@ class Ultimatum_Game():
 if __name__ == '__main__':
 
     N = 100
-    w = np.around(pow(10,2),4)
+    w = np.around(pow(10,-0.5),4)
     u = np.around(pow(10,-1.25),4) #u = 10^(-1.25)
-    Epochs = pow(10,7) #演化轮次
-    # check_point = "./result/2020-02-09-17-06-35"
-    check_point = None
+    Epochs = pow(10,8) #演化轮次
+    check_point = "./result/2020-02-11-10-46-10"
+    # check_point = None
     #生成环境env
-    UG = Ultimatum_Game(N,w,u)
     if check_point!= None:
+        UG = Ultimatum_Game(N,w,u,check_point = check_point)
         p_vector, q_vector,w,Start,u = UG.retrain(check_point)
     else:
+        UG = Ultimatum_Game(N,w,u)
         Start = 1
         #创建N个博弈方
         p_vector, q_vector = UG.Make_Player(N)
@@ -215,7 +223,7 @@ if __name__ == '__main__':
         p_vector,q_vector = UG.Moran_process(p_vector,q_vector,effective_payoff,u)
         #计算频率
         UG.Frequency_calculate(p_vector,q_vector,Epoch)
-        if Epoch % 200000== 0:
+        if Epoch % 100000== 0:
             print("Epoch[{}]".format(Epoch))
             print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
             print("Frequency:\n{}\n".format(UG.Frequency_matrix*1.0/(100*Epoch)))
