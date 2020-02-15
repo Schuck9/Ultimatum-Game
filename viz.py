@@ -28,11 +28,12 @@ def viz_frequency_map(RecordName,Epoch):
         outputname =   os.path.join(Record_dir,Epoch_str,'Gragh.jpg')
         frequency = pd.read_csv(frequency_path)
 
+    w = Epoch_template_str[0][1:]
     f = np.around(frequency.values,4)
     meta_element = np.arange(14)/12
     p = meta_element.copy()
     q = meta_element.copy()
-
+    
     np.set_printoptions(formatter={'all':lambda x: str(fractions.Fraction(x).limit_denominator())})# decimals to fractions
 
     plt.figure(figsize=(12.8,9.6),dpi=100,frameon=True)
@@ -57,6 +58,7 @@ def viz_frequency_map(RecordName,Epoch):
 
     ax_label = ['0',' ','1/6',' ','1/3',' ','1/2',' ','2/3',' ','5/6',' ','1']
 
+    plt.title("w={}".format(w),fontsize = 40)
     plt.xticks(meta_element,ax_label,fontsize=16)
     plt.yticks(meta_element,ax_label,fontsize=16)
     plt.xlabel('Offer(p)',fontsize=40)
@@ -66,7 +68,11 @@ def viz_frequency_map(RecordName,Epoch):
     plt.show()
 
 if __name__ == '__main__':
-    RecordName = '2020-02-09-23-11-44'
-    RecordName = '2020-02-09-23-12-51'
-    Epoch = 6700000
+    # RecordName = '2020-02-09-23-11-44'
+    # RecordName = '2020-02-09-23-12-51'
+    # RecordName = '2020-02-11-10-46-10'
+    RecordName ='2020-02-15-13-35-16'
+    # RecordName ='2020-02-15-13-36-11'
+    
+    Epoch = 900000
     viz_frequency_map(RecordName,Epoch)
