@@ -84,7 +84,7 @@ class Ultimatum_Game():
         return effective_payoff
 
     def Moran_process(self,p_vector,q_vector,effective_payoff,u):
-        '''
+        '''  
         Then one agent is picked proportional to exp[wπ] to reproduce, 
 
         where w is the intensity of selection; 
@@ -93,7 +93,10 @@ class Ultimatum_Game():
         '''
         individual_index = np.arange(self.N)
         effective_payoff = effective_payoff*1.0/np.sum(effective_payoff)
-        birth,death = np.random.choice(a = individual_index,size = 2,p = effective_payoff)
+        # bug fixed,death individual is supposed to be picked randomly 2020/2/15
+        # birth,death = np.random.choice(a = individual_index,size = 2,p = effective_payoff) 
+        birth = np.random.choice(a = individual_index,size = 1,p = effective_payoff)
+        death = np.random.choice(a = individual_index,size = 1)
         if np.random.rand(1) <= u:
             # Mutation occurs
             # p_vector[death],q_vector[death] = np.random.rand(2)
@@ -199,11 +202,11 @@ class Ultimatum_Game():
 if __name__ == '__main__':
 
     N = 100
-    w = np.around(pow(10,-0.5),4)
+    w = np.around(pow(10,2),4)
     u = np.around(pow(10,-1.25),4) #u = 10^(-1.25)
-    Epochs = pow(10,8) #演化轮次
-    check_point = "./result/2020-02-11-10-46-10"
-    # check_point = None
+    Epochs = pow(10,7) #演化轮次
+    # check_point = "./result/2020-02-11-10-46-10"
+    check_point = None
     #生成环境env
     if check_point!= None:
         UG = Ultimatum_Game(N,w,u,check_point = check_point)
