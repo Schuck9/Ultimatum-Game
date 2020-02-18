@@ -17,6 +17,7 @@ class Ultimatum_Game():
         # self.meta_element = np.around(np.arange(0,1,1/12),2) #1/12 equally divided
         self.meta_element=np.arange(divided_part)
         self.Frequency_matrix = np.zeros((divided_part,divided_part))
+        self.GameTrans_matrix = np.zeros((N,N))
         
         if check_point == None:
             self.dir_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
@@ -50,30 +51,26 @@ class Ultimatum_Game():
         pay_off_array = np.zeros((N,N)) #shape = (N,N-1)
         for P1 in range(self.N):
             for P2 in range(P1+1,self.N):
-                if P1 != P2:
-                    # proposer = P1 , responder = P2
-                    offer = p_vector[P1]
-                    demand = q_vector[P2]
-                    if offer >= demand:
-                        # acception
-                        # 1-offer has be modifed as 12 - offer at 2020/2/9/15:17  
-                        # pay_off_array[P1][P2] += 12 - offer 
-                        pay_off_array[P1][P2] += 1 - offer 
-                        pay_off_array[P2][P1] += offer
-
-                    # proposer = P2 , responder = P1
-                    offer = p_vector[P2]
-                    demand = q_vector[P1]
-                    if offer >= demand:
-                        # acception
-                        # pay_off_array[P2][P1] += 12 - offer 
-                        pay_off_array[P2][P1] += 1 - offer 
-                        pay_off_array[P1][P2] += offer   
-                else:
-                    continue
-        #Probability is NaN at 2020/2/9/0:18, modifed "/12"            
-        # return pay_off_array/12
+                # proposer = P1 , responder = P2
+                self.Game(P1,P2,p_vector,q_vector,pay_off_array)               
+                # proposer = P2 , responder = P1
+                self.Game(P2,P1,p_vector,q_vector,pay_off_array)
+ 
         return pay_off_array
+
+    def Game(self,P1,P2,p_vector,q_vector,pay_off_array):
+        # proposer = P1 , responder = P2
+        offer = p_vector[P1]
+        demand = q_vector[P2]
+        Game_index = self.GameTrans_matrix[P1][P2] #decide which game to play
+        available_source = 1*(Game_index)+0.5*(1 - Game_index)
+        if offer >= demand:
+            # acception 
+            self.GameTrans_matrix[P1][P2] = 1
+            pay_off_array[P1][P2] += (1 - offer)*available_source
+            pay_off_array[P2][P1] += offer*available_source
+        else:
+            self.GameTrans_matrix[P1][P2] = 0
 
     def Pay_off_calculate(self,pay_off,w):
         '''
@@ -140,8 +137,8 @@ class Ultimatum_Game():
         os.mkdir(subdir)
         pq = pd.DataFrame(data = pq_array)
         pq.to_csv('./result/{}/w{}_ep{}_u{}/strategy_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
-        # freq = pd.DataFrame(data = self.Frequency_matrix*1.0/(100*Epoch))
-        # freq.to_csv('./result/{}/w{}_ep{}_u{}/frequency_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
+        freq = pd.DataFrame(data = self.Frequency_matrix*1.0/(100*Epoch))
+        freq.to_csv('./result/{}/w{}_ep{}_u{}/frequency_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
         
         avg_pq = pd.DataFrame(data = avg_pq_list)
         avg_pq.to_csv('./result/{}/w{}_ep{}_u{}/avg_pq_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
@@ -185,9 +182,11 @@ class Ultimatum_Game():
         if parse_str[0] == 'strategy':
             strategy_path = os.path.join(result_dir,result_list[0])
             frequency_path = os.path.join(result_dir,result_list[1])
+            avg_pq_path = os.path.join(result_dir,result_list[2])
         else:
             strategy_path = os.path.join(result_dir,result_list[1])
             frequency_path = os.path.join(result_dir,result_list[0])
+            avg_pq_path = os.path.join(result_dir,result_list[2])
         w = float(parse_str[1][1:])
         Epoch = int(parse_str[2][2:])
         u = float(parse_str[3][1:])
@@ -196,8 +195,11 @@ class Ultimatum_Game():
 
         strategy = pd.read_csv(strategy_path)
         frequency = pd.read_csv(frequency_path)
+        avg_pq = pd.read_csv(avg_pq_path)
+    
         pd_array = strategy.values
         self.Frequency_matrix = (frequency.values)*(100*Epoch)
+        self.avg_strategy = avg_pq.values[-1]
         p_vector,q_vector = pd_array[0],pd_array[1]
         
         return p_vector, q_vector,w,Epoch+1,u
@@ -218,13 +220,14 @@ if __name__ == '__main__':
     u = np.around(pow(10,-3),4) #u = 10^(-1.25)
     avg_strategy = (0,0)
     avg_strategy_list = []
-    Epochs = pow(10,7) #演化轮次
+    Epochs = pow(10,2) #演化轮次
     # check_point = "./result/2020-02-11-10-46-10"
     check_point = None
     #生成环境env
     if check_point!= None:
         UG = Ultimatum_Game(N,w,u,check_point = check_point)
         p_vector, q_vector,w,Start,u = UG.retrain(check_point)
+        avg_strategy = UG.avg_strategy
     else:
         UG = Ultimatum_Game(N,w,u)
         Start = 1
@@ -243,16 +246,16 @@ if __name__ == '__main__':
         #计算平均策略
         avg_strategy = UG.avg_strategy_calculate(avg_strategy,p_vector,q_vector,Epoch)
         
-        if Epoch % 5000== 0:
+        if Epoch % 10== 0:
             avg_strategy_list.append(avg_strategy)
             # print("Epoch[{}]".format(Epoch))
             # print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
-            # print("Frequency:\n{}\n".format(UnG.FrequAency_matrix*1.0/(100*Epoch))) 
-        if Epoch % 50000 == 0:
+            # print("Frequency:\n{}\n".format(UG.Frequency_matrix*1.0/(100*Epoch))) 
+        if Epoch % 20 == 0:
             print("Epoch[{}]".format(Epoch))
             #保留一位有效数字
-            # p_vector = np.around(p_vector,1)
-            # q_vector = np.around(q_vector,1)
+            # p_vector_ = np.around(p_vector,1)
+            # q_vector_ = np.around(q_vector,1)
             print("Average strategy: (p ,q)={}\n".format(avg_strategy))
             # print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
             pq_array = np.vstack((p_vector,q_vector))
