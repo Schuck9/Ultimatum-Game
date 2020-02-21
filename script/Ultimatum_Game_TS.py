@@ -139,7 +139,8 @@ class Ultimatum_Game():
         pq.to_csv('./result/{}/w{}_ep{}_u{}/strategy_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
         freq = pd.DataFrame(data = self.Frequency_matrix*1.0/(100*Epoch))
         freq.to_csv('./result/{}/w{}_ep{}_u{}/frequency_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
-        
+        gt = pd.DataFrame(data = self.GameTrans_matrix)
+        gt.to_csv('./result/{}/w{}_ep{}_u{}/GameTrans_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
         avg_pq = pd.DataFrame(data = avg_pq_list)
         avg_pq.to_csv('./result/{}/w{}_ep{}_u{}/avg_pq_w{}_ep{}_u{}.csv'.format(self.dir_str,self.w,Epoch,self.u,self.w,Epoch,self.u),index = None)
      
@@ -173,7 +174,8 @@ class Ultimatum_Game():
         '''
         continue evolution from specific check point
         '''
-        lists = os.listdir(filepath)         
+        filepath = os.path.join('./result/',filepath)
+        lists = os.listdir(filepath)   
         lists.sort(key=lambda fn: os.path.getmtime(filepath + "/" + fn)) 
         result_dir = os.path.join(filepath, lists[-1])      
         result_list = os.listdir(result_dir)
@@ -183,10 +185,12 @@ class Ultimatum_Game():
             strategy_path = os.path.join(result_dir,result_list[0])
             frequency_path = os.path.join(result_dir,result_list[1])
             avg_pq_path = os.path.join(result_dir,result_list[2])
+            gt_path = os.path.join(result_dir,result_list[3])
         else:
-            strategy_path = os.path.join(result_dir,result_list[1])
+            strategy_path = os.path.join(result_dir,result_list[2])
             frequency_path = os.path.join(result_dir,result_list[0])
-            avg_pq_path = os.path.join(result_dir,result_list[2])
+            avg_pq_path = os.path.join(result_dir,result_list[1])
+            gt_path = os.path.join(result_dir,result_list[3])
         w = float(parse_str[1][1:])
         Epoch = int(parse_str[2][2:])
         u = float(parse_str[3][1:])
@@ -196,8 +200,10 @@ class Ultimatum_Game():
         strategy = pd.read_csv(strategy_path)
         frequency = pd.read_csv(frequency_path)
         avg_pq = pd.read_csv(avg_pq_path)
+        gt = pd.read_csv(gt_path)
     
         pd_array = strategy.values
+        self.GameTrans_matrix = gt.values
         self.Frequency_matrix = (frequency.values)*(100*Epoch)
         self.avg_strategy = avg_pq.values[-1]
         p_vector,q_vector = pd_array[0],pd_array[1]
@@ -216,12 +222,12 @@ class Ultimatum_Game():
 if __name__ == '__main__':
 
     N = 100
-    w = np.around(pow(10,-2),4)
+    w = np.around(pow(10,-1),4)
     u = np.around(pow(10,-3),4) #u = 10^(-1.25)
     avg_strategy = (0,0)
     avg_strategy_list = []
-    Epochs = pow(10,2) #演化轮次
-    # check_point = "./result/2020-02-11-10-46-10"
+    Epochs = pow(10,8) #演化轮次
+    # check_point = "2020-02-21-16-14-37"
     check_point = None
     #生成环境env
     if check_point!= None:
@@ -246,12 +252,12 @@ if __name__ == '__main__':
         #计算平均策略
         avg_strategy = UG.avg_strategy_calculate(avg_strategy,p_vector,q_vector,Epoch)
         
-        if Epoch % 10== 0:
+        if Epoch % 50000== 0:
             avg_strategy_list.append(avg_strategy)
             # print("Epoch[{}]".format(Epoch))
             # print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
             # print("Frequency:\n{}\n".format(UG.Frequency_matrix*1.0/(100*Epoch))) 
-        if Epoch % 20 == 0:
+        # if Epoch % 50000 == 0:
             print("Epoch[{}]".format(Epoch))
             #保留一位有效数字
             # p_vector_ = np.around(p_vector,1)
