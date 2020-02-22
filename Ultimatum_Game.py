@@ -174,23 +174,26 @@ class Ultimatum_Game():
         '''
         continue evolution from specific check point
         '''
+        print(filepath)
         filepath = os.path.join('./result/',filepath)
         lists = os.listdir(filepath)   
         lists.sort(key=lambda fn: os.path.getmtime(filepath + "/" + fn)) 
         result_dir = os.path.join(filepath, lists[-1])      
         result_list = os.listdir(result_dir)
-    
+        result_list.sort()
+
         parse_str = result_list[0][:-4].split("_")
-        if parse_str[0] == 'strategy':
-            strategy_path = os.path.join(result_dir,result_list[0])
-            frequency_path = os.path.join(result_dir,result_list[1])
-            avg_pq_path = os.path.join(result_dir,result_list[2])
-            gt_path = os.path.join(result_dir,result_list[3])
-        else:
-            strategy_path = os.path.join(result_dir,result_list[2])
-            frequency_path = os.path.join(result_dir,result_list[0])
-            avg_pq_path = os.path.join(result_dir,result_list[1])
-            gt_path = os.path.join(result_dir,result_list[3])
+        # if parse_str[0] == 'strategy':
+        #     strategy_path = os.path.join(result_dir,result_list[0])
+        #     frequency_path = os.path.join(result_dir,result_list[1])
+        #     avg_pq_path = os.path.join(result_dir,result_list[2])
+        #     gt_path = os.path.join(result_dir,result_list[3])
+        # else:
+        strategy_path = os.path.join(result_dir,result_list[3])
+        frequency_path = os.path.join(result_dir,result_list[2])
+        avg_pq_path = os.path.join(result_dir,result_list[1])
+        gt_path = os.path.join(result_dir,result_list[0])
+        
         w = float(parse_str[1][1:])
         Epoch = int(parse_str[2][2:])
         u = float(parse_str[3][1:])
@@ -227,8 +230,8 @@ if __name__ == '__main__':
     avg_strategy = (0,0)
     avg_strategy_list = []
     Epochs = pow(10,8) #演化轮次
-    # check_point = "2020-02-21-16-14-37"
-    check_point = None
+    check_point = "2020-02-22-13-49-56"
+    # check_point = None
     #生成环境env
     if check_point!= None:
         UG = Ultimatum_Game(N,w,u,check_point = check_point)
