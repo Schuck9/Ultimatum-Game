@@ -1,6 +1,6 @@
 """
 A simple implementation of Ultimatum Game
-@date: 2020.2.21
+@date: 2020.2.23
 @author: Tingyu Mo
 """
 
