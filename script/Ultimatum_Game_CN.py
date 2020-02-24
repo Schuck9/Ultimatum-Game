@@ -1,6 +1,6 @@
 """
 A simple implementation of Ultimatum Game
-@date: 2020.2.17
+@date: 2020.2.24
 @author: Tingyu Mo
 """
 
@@ -223,12 +223,13 @@ if __name__ == '__main__':
     avg_strategy = (0,0)
     avg_strategy_list = []
     Epochs = pow(10,7) #演化轮次
-    check_point = "2020-02-23-23-10-52"
+    check_point = "2020-02-23-23-10-30"
     # check_point = None
     #生成环境env
     if check_point!= None:
         UG = Ultimatum_Game(N,w,u,check_point = check_point)
         p_vector, q_vector,w,Start,u = UG.retrain(check_point)
+        avg_strategy = UG.avg_strategy
     else:
         UG = Ultimatum_Game(N,w,u)
         Start = 1
