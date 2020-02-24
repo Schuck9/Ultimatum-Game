@@ -58,8 +58,8 @@ class Ultimatum_Game():
                         # acception
                         # 1-offer has be modifed as 12 - offer at 2020/2/9/15:17  
                         # pay_off_array[P1][P2] += 12 - offer 
-                        pay_off_array[P1][P2] += 1 - offer 
-                        pay_off_array[P2][P1] += offer
+                        pay_off_array[P1][P2] += (1 - offer )*0.5
+                        pay_off_array[P2][P1] += offer*0.5
 
                     # proposer = P2 , responder = P1
                     offer = p_vector[P2]
@@ -67,8 +67,8 @@ class Ultimatum_Game():
                     if offer >= demand:
                         # acception
                         # pay_off_array[P2][P1] += 12 - offer 
-                        pay_off_array[P2][P1] += 1 - offer 
-                        pay_off_array[P1][P2] += offer   
+                        pay_off_array[P2][P1] +=  (1 - offer )*0.5
+                        pay_off_array[P1][P2] += offer*0.5  
                 else:
                     continue
         #Probability is NaN at 2020/2/9/0:18, modifed "/12"            
@@ -176,28 +176,32 @@ class Ultimatum_Game():
         '''
         continue evolution from specific check point
         '''
-        lists = os.listdir(filepath)         
+        print(filepath)
+        filepath = os.path.join('./result/',filepath)
+        lists = os.listdir(filepath)   
         lists.sort(key=lambda fn: os.path.getmtime(filepath + "/" + fn)) 
         result_dir = os.path.join(filepath, lists[-1])      
         result_list = os.listdir(result_dir)
-    
-        parse_str = result_list[0][:-4].split("_")
-        if parse_str[0] == 'strategy':
-            strategy_path = os.path.join(result_dir,result_list[0])
-            frequency_path = os.path.join(result_dir,result_list[1])
-        else:
-            strategy_path = os.path.join(result_dir,result_list[1])
-            frequency_path = os.path.join(result_dir,result_list[0])
+        result_list.sort()
+
+        parse_str = result_list[1][:-4].split("_")
+
+        strategy_path = os.path.join(result_dir,result_list[1])
+        avg_pq_path = os.path.join(result_dir,result_list[0])
+
+        
         w = float(parse_str[1][1:])
         Epoch = int(parse_str[2][2:])
         u = float(parse_str[3][1:])
         self.w = w
         self.u = u
 
-        strategy = pd.read_csv(strategy_path)
-        frequency = pd.read_csv(frequency_path)
+        strategy = pd.read_csv(strategy_path)     
+        avg_pq = pd.read_csv(avg_pq_path)
+
         pd_array = strategy.values
-        self.Frequency_matrix = (frequency.values)*(100*Epoch)
+
+        self.avg_strategy = avg_pq.values[-1]
         p_vector,q_vector = pd_array[0],pd_array[1]
         
         return p_vector, q_vector,w,Epoch+1,u
@@ -214,13 +218,13 @@ class Ultimatum_Game():
 if __name__ == '__main__':
 
     N = 100
-    w = np.around(pow(10,-2),4)
+    w = np.around(pow(10,-1),4)
     u = np.around(pow(10,-3),4) #u = 10^(-1.25)
     avg_strategy = (0,0)
     avg_strategy_list = []
     Epochs = pow(10,7) #演化轮次
-    # check_point = "./result/2020-02-11-10-46-10"
-    check_point = None
+    check_point = "2020-02-23-23-10-52"
+    # check_point = None
     #生成环境env
     if check_point!= None:
         UG = Ultimatum_Game(N,w,u,check_point = check_point)
@@ -243,13 +247,14 @@ if __name__ == '__main__':
         #计算平均策略
         avg_strategy = UG.avg_strategy_calculate(avg_strategy,p_vector,q_vector,Epoch)
         
-        if Epoch % 5000== 0:
-            avg_strategy_list.append(avg_strategy)
+        # if Epoch % 5000== 0:
+        #     avg_strategy_list.append(avg_strategy)
             # print("Epoch[{}]".format(Epoch))
             # print("p_vector:\n{}\nq_vector:\n{}".format(p_vector,q_vector))
             # print("Frequency:\n{}\n".format(UnG.FrequAency_matrix*1.0/(100*Epoch))) 
         if Epoch % 50000 == 0:
             print("Epoch[{}]".format(Epoch))
+            avg_strategy_list.append(avg_strategy)
             #保留一位有效数字
             # p_vector = np.around(p_vector,1)
             # q_vector = np.around(q_vector,1)
