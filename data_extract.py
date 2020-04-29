@@ -1,6 +1,6 @@
 """
 a script for extracting data for game transition
-@date: 2020.4.28
+@date: 2020.4.29
 @author: Tingyu Mo
 """
 
@@ -37,9 +37,13 @@ def data_extract(data_path,save_path,num_extract_file=4):
             print(last_file)
             epoch_data = os.listdir(last_file)
             epoch_data.sort()
-            avg_pq_path= os.path.join(last_file,epoch_data[0])
+            num_file = len(epoch_data)
+            if num_file == 3:
+                avg_pq_path= os.path.join(last_file,epoch_data[0])
+            else:
+                avg_pq_path= os.path.join(last_file,epoch_data[1])
             avg_pq = pd.read_csv(avg_pq_path)
-            avg_strategy = avg_pq.values[-1][0:]
+            avg_strategy = avg_pq.values[-1]
             extracted_data.append([file_name,last_file_name,avg_strategy[0],avg_strategy[1]])
     
     extracted_data_pd = pd.DataFrame(data =extracted_data)
